@@ -3,6 +3,7 @@ package com.alex.alexnews.home.adapter;
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.alex.alexnews.R;
 import com.alex.alexnews.common.AppNetConfig;
@@ -93,6 +95,8 @@ public class HomeFragmentAdapter extends RecyclerView.Adapter {
             return new CHANNELViewHolder(mContext,mLayoutInflater.inflate(R.layout.channel_item,null));
         }else if(viewType == ACT){
             return new ActViewHolder(mContext,mLayoutInflater.inflate(R.layout.act_item,null));
+        }else if(viewType == SECKILL){
+            return new SeckillViewHolder(mContext,mLayoutInflater.inflate(R.layout.seckill_item,null));
         }
         return null;
     }
@@ -145,8 +149,10 @@ public class HomeFragmentAdapter extends RecyclerView.Adapter {
         }else if (getItemViewType(currentType) == ACT) {
             ActViewHolder actViewHolder = (ActViewHolder) holder;
             actViewHolder.setData(resuleBean.getAct_info());
+        }else if (getItemViewType(currentType) == SECKILL) {
+            SeckillViewHolder seckillViewHolder = (SeckillViewHolder) holder;
+            seckillViewHolder.setData(resuleBean.getSeckill_info());
         }
-
     }
 
     /**
@@ -157,7 +163,7 @@ public class HomeFragmentAdapter extends RecyclerView.Adapter {
     @Override
     public int getItemCount() {
         //开发过程中从1-->2
-        return 3;
+        return 4;
     }
 
     /**
@@ -299,6 +305,38 @@ public class HomeFragmentAdapter extends RecyclerView.Adapter {
                 @Override
                 public void destroyItem(ViewGroup container, int position, Object object) {
                     container.removeView((View) object);
+                }
+            });
+        }
+    }
+    public class SeckillViewHolder extends RecyclerView.ViewHolder{
+        private Context mContext;
+        private TextView tv_time_seckill;
+        private TextView tv_more_seckill;
+        private RecyclerView rv_seckill;
+        SeckillRecyclerViewAdapter mAdapter ;
+
+        public SeckillViewHolder(Context context, View view) {
+            super(view);
+            this.mContext = context;
+            tv_time_seckill = (TextView) view.findViewById(R.id.tv_time_seckill);
+            tv_more_seckill = (TextView) view.findViewById(R.id.tv_more_seckill);
+            rv_seckill = (RecyclerView) view.findViewById(R.id.rv_seckill);
+        }
+
+        public void setData(ResuleBeanData.ResultBean.SeckillInfoBean data) {
+            //1.得到数据
+            //2.设置数据
+            //3.设置适配器RecyclerView
+            mAdapter = new SeckillRecyclerViewAdapter(mContext,data.getList());
+            rv_seckill.setAdapter(mAdapter);
+            //设置布局管理器
+            rv_seckill.setLayoutManager(new LinearLayoutManager(mContext,LinearLayoutManager.HORIZONTAL,false));
+            //设置item的点击事件
+            mAdapter.setOnSeckillRecyclerView(new SeckillRecyclerViewAdapter.OnSeckillRecyclerView() {
+                @Override
+                public void onItemClick(int position) {
+                    UIUtils.toast("秒杀position"+position,false);
                 }
             });
         }
