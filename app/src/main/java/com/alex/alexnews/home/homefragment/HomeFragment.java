@@ -66,11 +66,26 @@ public class HomeFragment extends BaseFragment {
             //设置适配器
             adapter = new HomeFragmentAdapter(getActivity(),resultBean);
             mRvHome.setAdapter(adapter);
-
+            GridLayoutManager manager = new GridLayoutManager(getActivity(),1);
+            //设置跨度大小的监听
+            manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    if(position<=4){
+                        //隐藏
+                        mIbTop.setVisibility(View.INVISIBLE);
+                    }else{
+                        //显示
+                        mIbTop.setVisibility(View.VISIBLE);
+                    }
+                    return 1;
+                }
+            });
             //设置布局管理者
-            mRvHome.setLayoutManager(new GridLayoutManager(getActivity(),1));
+            mRvHome.setLayoutManager(manager);
         }else{
             //没有数据
+
         }
 
     }

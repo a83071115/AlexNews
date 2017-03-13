@@ -1,6 +1,9 @@
 package com.alex.alexnews.home.adapter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.alex.alexnews.R;
+import com.alex.alexnews.activity.GoodsInfoActivity;
 import com.alex.alexnews.common.AppNetConfig;
 import com.alex.alexnews.home.bean.ResuleBeanData;
 import com.alex.alexnews.utils.UIUtils;
@@ -26,7 +30,9 @@ import com.youth.banner.listener.OnBannerClickListener;
 import com.youth.banner.listener.OnLoadImageListener;
 import com.zhy.magicviewpager.transformer.AlphaPageTransformer;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -97,6 +103,10 @@ public class HomeFragmentAdapter extends RecyclerView.Adapter {
             return new ActViewHolder(mContext,mLayoutInflater.inflate(R.layout.act_item,null));
         }else if(viewType == SECKILL){
             return new SeckillViewHolder(mContext,mLayoutInflater.inflate(R.layout.seckill_item,null));
+        }else if(viewType == RECOMMEND){
+            return new RecommendViewHolder(mContext,mLayoutInflater.inflate(R.layout.recommend_item,null));
+        }else if(viewType == HOT){
+            return new HotViewHolder(mContext,mLayoutInflater.inflate(R.layout.hot_item,null));
         }
         return null;
     }
@@ -152,6 +162,12 @@ public class HomeFragmentAdapter extends RecyclerView.Adapter {
         }else if (getItemViewType(currentType) == SECKILL) {
             SeckillViewHolder seckillViewHolder = (SeckillViewHolder) holder;
             seckillViewHolder.setData(resuleBean.getSeckill_info());
+        }else if (getItemViewType(currentType) == RECOMMEND) {
+            RecommendViewHolder recommendViewHolder = (RecommendViewHolder) holder;
+            recommendViewHolder.setData(resuleBean.getRecommend_info());
+        }else if (getItemViewType(currentType) == HOT) {
+            HotViewHolder hotViewHolder = (HotViewHolder) holder;
+            hotViewHolder.setData(resuleBean.getHot_info());
         }
     }
 
@@ -163,7 +179,7 @@ public class HomeFragmentAdapter extends RecyclerView.Adapter {
     @Override
     public int getItemCount() {
         //开发过程中从1-->2
-        return 4;
+        return 6;
     }
 
     /**
@@ -205,6 +221,7 @@ public class HomeFragmentAdapter extends RecyclerView.Adapter {
                 @Override
                 public void OnBannerClick(int position) {
                     UIUtils.toast(""+position,false);
+                    startGoodsInfoActivity();
                 }
             });
         }
@@ -309,7 +326,33 @@ public class HomeFragmentAdapter extends RecyclerView.Adapter {
             });
         }
     }
+
+
+    /**
+     * Seckill的ViewHolder 秒杀
+     */
     public class SeckillViewHolder extends RecyclerView.ViewHolder{
+        /**
+         * 相差多少时间  - 毫秒
+         */
+        private long dt = 0;
+
+        private Handler handler = new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                dt = dt -1000;
+                //时间转换
+                SimpleDateFormat format  = new SimpleDateFormat("HH:mm:ss");
+                String time = format.format(new Date(dt));
+                tv_time_seckill.setText(time);
+                handler.removeMessages(0);
+                handler.sendEmptyMessageDelayed(0,1000);
+                if(dt<=0){
+                    handler.removeCallbacksAndMessages(null);
+                }
+            }
+        };
         private Context mContext;
         private TextView tv_time_seckill;
         private TextView tv_more_seckill;
@@ -337,8 +380,81 @@ public class HomeFragmentAdapter extends RecyclerView.Adapter {
                 @Override
                 public void onItemClick(int position) {
                     UIUtils.toast("秒杀position"+position,false);
+                    startGoodsInfoActivity();
+                }
+            });
+            //秒杀倒计时
+            dt  = Integer.valueOf(data.getEnd_time()) - Integer.valueOf(data.getStart_time());
+            //发送线程
+            handler.sendEmptyMessageDelayed(0,1000);
+        }
+    }
+    /**
+     * Recommed的ViewHolder 新品推荐
+     */
+    public class RecommendViewHolder extends RecyclerView.ViewHolder{
+        private Context mContext;
+        private GridView mGridView;
+        private TextView tv_more_recommend;
+        private RecommendAdapter mAdapter;
+        public RecommendViewHolder(Context context, View view) {
+            super(view);
+            this.mContext = context;
+            mGridView = (GridView) view.findViewById(R.id.gv_recommend);
+            tv_more_recommend = (TextView) view.findViewById(R.id.tv_more_recommend);
+        }
+
+        public void setData(List<ResuleBeanData.ResultBean.RecommendInfoBean> data) {
+            //1.有数据了
+            //2.设置适配器
+            mAdapter = new RecommendAdapter(data);
+            mGridView.setAdapter(mAdapter);
+            mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> view, View view1, int i, long l) {
+                    UIUtils.toast("Recommed的position"+i,false);
+                    startGoodsInfoActivity();
                 }
             });
         }
+    }
+
+    /**
+     * HotViewHolder 热卖
+     */
+    private class HotViewHolder extends RecyclerView.ViewHolder {
+        private Context mContext ;
+        private TextView tv_more_hot;
+        private GridView gv_hot;
+        private HotGirdViewAdapter mAdapter;
+        public HotViewHolder(Context context, View view) {
+            super(view);
+            this.mContext = context;
+            tv_more_hot = (TextView) view.findViewById(R.id.tv_more_hot);
+            gv_hot = (GridView) view.findViewById(R.id.gv_hot);
+
+        }
+
+        public void setData(List<ResuleBeanData.ResultBean.HotInfoBean> data) {
+            //1.得到数据
+            //2.设置适配器
+            mAdapter = new HotGirdViewAdapter(data);
+            gv_hot.setAdapter(mAdapter);
+            gv_hot.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> view, View view1, int i, long l) {
+                    UIUtils.toast("Hot的position"+i,false);
+                    startGoodsInfoActivity();
+                }
+            });
+        }
+    }
+
+    /**
+     * 启动商品信息列表页面
+     */
+    private  void startGoodsInfoActivity(){
+        Intent intent = new Intent(mContext, GoodsInfoActivity.class);
+        mContext.startActivity(intent);
     }
 }
